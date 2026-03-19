@@ -29,7 +29,7 @@ typedef enum {
 
 typedef void (*button_isr_handler_t)();
 
-static xQueueHandle button_event_queue;
+static QueueHandle_t button_event_queue;
 static button_state_t button_state = IDLE;
 static uint32_t press_timestamp;
 static uint32_t release_timestamp;

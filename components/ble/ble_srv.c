@@ -145,9 +145,7 @@ static void blehr_host_task(void *param) {
 
 
 void blehr_start_srv(bool *status_out) {
-    ESP_ERROR_CHECK(esp_nimble_hci_and_controller_init());
-
-    nimble_port_init();
+    ESP_ERROR_CHECK(nimble_port_init());
     ble_hs_cfg.sync_cb = blehr_on_sync;
     ble_hs_cfg.reset_cb = blehr_on_reset;
 
@@ -166,9 +164,9 @@ void blehr_stop_srv(bool *status_out) {
     int ret = nimble_port_stop();
     if (ret == 0) {
         ESP_LOGI(TAG, "BLE host stopped");
-        ret = esp_nimble_hci_and_controller_deinit();
+        ret = nimble_port_deinit();
         if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
+            ESP_LOGE(TAG, "nimble_port_deinit() failed with error: %d", ret);
         }
     }
     *status_out = false;

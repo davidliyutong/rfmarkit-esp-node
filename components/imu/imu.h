@@ -1,6 +1,9 @@
 #ifndef IMU_H_
 #define IMU_H_
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+
 #include "settings.h"
 
 typedef struct {
@@ -98,16 +101,4 @@ extern imu_interface_t g_imu;
 void imu_interface_init(imu_interface_t *p_interface, imu_config_t *p_config);
 
 
-/** IMU model related **/
-#if CONFIG_IMU_SENSOR_BNO08X
-
-#include "bno08x.h"
-
-#elif CONFIG_IMU_SENSOR_HI229
-
-#include "hi229.h"
-
-#endif
-
-// TODO: fix hi229 broken interface, make it align with bno08x
 #endif

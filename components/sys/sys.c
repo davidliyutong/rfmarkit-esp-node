@@ -7,10 +7,13 @@
 
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_chip_info.h"
+#include "esp_mac.h"
 #include "esp_err.h"
 #include "esp_https_ota.h"
 #include "esp_ota_ops.h"
 #include "nvs_flash.h"
+#include "esp_flash.h"
 
 #include "sys.h"
 #include "imu.h"
@@ -46,6 +49,9 @@ static esp_err_t esp_ota_event_handler(esp_http_client_event_t *evt) {
         case HTTP_EVENT_DISCONNECTED:
             ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
             break;
+        case HTTP_EVENT_REDIRECT:
+            ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT");
+            break;
     }
     return ESP_OK;
 }
@@ -56,7 +62,7 @@ static esp_err_t esp_ota_event_handler(esp_http_client_event_t *evt) {
 **/
 esp_err_t sys_ota_perform() {
     ESP_LOGI(TAG, "[ota] performing OTA, url=%s", g_mcu.ota_url);
-    esp_http_client_config_t config = {
+    esp_http_client_config_t http_config = {
         .url = g_mcu.ota_url,
         .max_authorization_retries = 3,
         .auth_type = HTTP_AUTH_TYPE_NONE,
@@ -64,7 +70,10 @@ esp_err_t sys_ota_perform() {
         .keep_alive_enable = true,
         .skip_cert_common_name_check=true
     };
-    esp_err_t ret = esp_https_ota(&config);
+    esp_https_ota_config_t ota_config = {
+        .http_config = &http_config,
+    };
+    esp_err_t ret = esp_https_ota(&ota_config);
     if (ret == ESP_OK) {
         esp_restart();
     } else {
@@ -140,7 +149,9 @@ void sys_init_chip() {
              (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
              (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
     ESP_LOGD(TAG, "Silicon revision %d, ", chip_info.revision);
-    ESP_LOGD(TAG, "%dMB %s flash", spi_flash_get_chip_size() / (1024 * 1024),
+    uint32_t flash_size;
+    esp_flash_get_size(NULL, &flash_size);
+    ESP_LOGD(TAG, "%luMB %s flash", (unsigned long)(flash_size / (1024 * 1024)),
              (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
     ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
 

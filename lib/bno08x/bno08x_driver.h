@@ -104,9 +104,7 @@ typedef struct
     gpio_num_t io_rst;
     gpio_num_t io_wake;
     int32_t sclk_speed;
-#if ESP_IDF_VERSION_MAJOR == 5
     uint8_t cpu_spi_intr_affinity;
-#endif
 } BNO08x_config_t;
 
 /// @brief Holds data that is sent over spi.
@@ -133,9 +131,6 @@ typedef struct bno08x_cb_list_t
     bno08x_cb_fxn_t *callbacks; ///< dynamically allocated storage for callback functions
     uint16_t length; ///< length of the list (total amount of registered callback functions)
 } bno08x_cb_list_t;
-
-// Default IMU configuration settings modifiable via menuconfig
-#define DEFAULT_IMU_CONFIG {CONFIG_ESP32_BNO08x_SPI_HOST, CONFIG_ESP32_BNO08X_GPIO_DI, CONFIG_ESP32_BNO08X_GPIO_SDA, CONFIG_ESP32_BNO08X_GPIO_SCL, CONFIG_ESP32_BNO08X_GPIO_CS, CONFIG_ESP32_BNO08X_GPIO_HINT, CONFIG_ESP32_BNO08X_GPIO_RST, CONFIG_ESP32_BNO08X_GPIO_WAKE, CONFIG_ESP32_BNO08X_SCL_SPEED_HZ, CONFIG_ESP32_BNO08X_SPI_INTR_CPU_AFFINITY}
 
 typedef struct
 {

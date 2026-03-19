@@ -131,7 +131,7 @@ power_mgmt_state_t power_mgmt_wake_up_handler() {
         // TODO: update this logic after PCB fix, detect movement
         ESP_LOGI(TAG, "wakeup from timer");
         imu_config_t cfg = { .target_fps = g_mcu.target_fps};
-        imu_interface_init_external(&g_imu, &cfg);
+        imu_interface_init(&g_imu, &cfg);
         imu_dgram_t imu_status;
         for (esp_err_t err = ESP_FAIL; err != ESP_OK; taskYIELD()) {
             err = g_imu.read(g_imu.p_imu, &imu_status, true);
@@ -171,7 +171,7 @@ esp_err_t power_mgmt_on_enter_standby() {
     /** Init global imu struct g_imu **/
     if (!g_power_mgmt_ctx.peripheral_state.imu_initialized) {
         imu_config_t cfg = { .target_fps = g_mcu.target_fps};
-        imu_interface_init_external(&g_imu, &cfg);
+        imu_interface_init(&g_imu, &cfg);
         g_power_mgmt_ctx.peripheral_state.imu_initialized = true;
     } else {
         if (!g_imu.p_imu->enabled) {

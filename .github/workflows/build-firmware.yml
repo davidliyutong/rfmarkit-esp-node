@@ -5,22 +5,23 @@ on:
   release:
     types: [ published ]
 
+env:
+  ESP_IDF_VERSION: v5.5.3
+
 jobs:
   build_v1:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
-      #      with:
-      #        submodules: 'recursive'
-      - name: Copy the correct sdkconfig
-        run: make set_hardware_v1
+        uses: actions/checkout@v4
+
       - name: esp-idf build
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v4.4.2
+          esp_idf_version: ${{ env.ESP_IDF_VERSION }}
           target: esp32
           path: '/'
+          command: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.v1" build
 
       - name: Pack
         run: |
@@ -28,7 +29,7 @@ jobs:
           cp ./build/rfmarkit-esp-node.bin rfmarkit-esp-node-v1.bin
 
       - name: Upload
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: rfmarkit-esp-node-v1
           path: rfmarkit-esp-node-v1.tar.gz
@@ -39,28 +40,25 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ github.ref }}
-          body: TODO New Release.
           draft: true
           prerelease: true
           files: |
             rfmarkit-esp-node-v1.bin
             rfmarkit-esp-node-v1.tar.gz
+
   build_v2:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
-      #      with:
-      #        submodules: 'recursive'
-      - name: Copy the correct sdkconfig
-        run: make set_hardware_v2
+        uses: actions/checkout@v4
 
       - name: esp-idf build
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v4.4.2
+          esp_idf_version: ${{ env.ESP_IDF_VERSION }}
           target: esp32s3
           path: '/'
+          command: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.v2" build
 
       - name: Pack
         run: |
@@ -68,7 +66,7 @@ jobs:
           cp ./build/rfmarkit-esp-node.bin rfmarkit-esp-node-v2.bin
 
       - name: Upload
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: rfmarkit-esp-node-v2
           path: rfmarkit-esp-node-v2.tar.gz
@@ -79,7 +77,6 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ github.ref }}
-          body: TODO New Release.
           draft: true
           prerelease: true
           files: |

@@ -1,5 +1,6 @@
 #include <string.h>
-#include <esp_mesh.h>
+#include <sys/time.h>
+#include <esp_wifi.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -22,8 +23,6 @@ typedef struct {
     imu_t base;
     BNO08x driver;
 } bno08x_t;
-
-imu_interface_t g_imu = {0};
 
 static bno08x_t s_bno08x = {0};
 
@@ -127,7 +126,7 @@ esp_err_t bno08x_read(imu_t *p_imu, imu_dgram_t *out, __attribute__((unused)) bo
         BNO08x_get_gyro_calibrated_velocity(p_driver, &out->imu.gyr[0], &out->imu.gyr[1], &out->imu.gyr[2], &acc);
 #endif
         // tsf timestamp
-        out->tsf_ts_us = esp_mesh_get_tsf_time();
+        out->tsf_ts_us = esp_wifi_get_tsf_time(WIFI_IF_STA);
 
         out->buffer_delay_us = (int32_t)(esp_timer_get_time() - now);
 
@@ -277,7 +276,7 @@ esp_err_t bno08x_write_bytes(imu_t *p_imu, void *in, size_t len) {
  * @param p_interface
  * @param p_config
 **/
-void imu_interface_init(imu_interface_t *p_interface, imu_config_t *p_config) {
+void bno08x_interface_init(imu_interface_t *p_interface, imu_config_t *p_config) {
     p_interface->p_imu = (imu_t *) &s_bno08x;
     p_interface->p_imu->target_fps = p_config->target_fps;
     if (p_interface->p_imu->initialized) {

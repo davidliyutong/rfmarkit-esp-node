@@ -21,7 +21,7 @@
 #define CONFIG_BNO08X_WAKE_PIN          CONFIG_IMU_WAKE_PIN
 
 // Depending on the board (esp32s, esp32s3), the port is different
-#if defined(CONFIG_IDF_TARGET_ESP32S)
+#if defined(CONFIG_IDF_TARGET_ESP32)
 #define CONFIG_BNO08X_SPI_HOST          VSPI_HOST
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
 #define CONFIG_BNO08X_SPI_HOST          SPI2_HOST
@@ -43,8 +43,6 @@ typedef struct {
 } bno08x_config_t;
 
 /** Exposed API **/
-#define imu_interface_init_external(imu, config)  \
-    imu_interface_init((imu), (config))
-
+void bno08x_interface_init(imu_interface_t *p_interface, imu_config_t *p_config);
 
 #endif

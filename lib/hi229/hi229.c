@@ -1,7 +1,8 @@
 #include <sys/select.h>
 #include <sys/cdefs.h>
+#include <sys/time.h>
 #include <string.h>
-#include <esp_mesh.h>
+#include <esp_wifi.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -18,6 +19,7 @@
 #include "imu.h"
 #include "hi229.h"
 #include "hi229_serial.h"
+#include "sys.h"
 
 #define EV_DATA_READY BIT0
 #define hi229_delay_ms(x) vTaskDelay((x) / portTICK_PERIOD_MS);
@@ -33,7 +35,6 @@ typedef struct {
     EventGroupHandle_t event_group;
 } hi229_t;
 
-imu_interface_t g_imu = {0};
 static hi229_t s_hi229 = {0};
 
 static const char *TAG = "imu[hi229]";
@@ -72,7 +73,7 @@ static void s_hi229_msp_init(hi229_t *p_imu) {
     ESP_ERROR_CHECK(uart_set_pin(p_imu->config.port, p_imu->config.tx_pin, p_imu->config.rx_pin, p_imu->config.rts_pin, p_imu->config.cts_pin));
 
     gpio_config_t ctrl_pin_conf = {
-        .intr_type = (gpio_int_type_t) GPIO_PIN_INTR_DISABLE,
+        .intr_type = (gpio_int_type_t) GPIO_INTR_DISABLE,
         .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = (1ULL << p_imu->config.ctrl_pin),
         .pull_down_en = GPIO_PULLDOWN_ENABLE,
@@ -82,7 +83,7 @@ static void s_hi229_msp_init(hi229_t *p_imu) {
     gpio_set_level(p_imu->config.ctrl_pin, 0);
 
     gpio_config_t sync_out_pin_conf = {
-        .intr_type = (gpio_int_type_t) GPIO_PIN_INTR_DISABLE,
+        .intr_type = (gpio_int_type_t) GPIO_INTR_DISABLE,
         .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = (1ULL << p_imu->config.sync_out_pin),
         .pull_down_en = GPIO_PULLDOWN_ENABLE,
@@ -92,7 +93,7 @@ static void s_hi229_msp_init(hi229_t *p_imu) {
     gpio_set_level(p_imu->config.sync_out_pin, 0);
 
     gpio_config_t sync_in_pin_conf = {
-        .intr_type = (gpio_int_type_t) GPIO_PIN_INTR_DISABLE,
+        .intr_type = (gpio_int_type_t) GPIO_INTR_DISABLE,
         .mode = GPIO_MODE_INPUT,
         .pin_bit_mask = (1ULL << p_imu->config.sync_in_pin),
         .pull_down_en = GPIO_PULLDOWN_ENABLE,
@@ -164,7 +165,7 @@ esp_err_t IRAM_ATTR hi229_read(imu_t *p_imu_in, imu_dgram_t *out, bool crc_check
             memcpy(&out->imu, &p_hi229->raw_snapshot, sizeof(ch_imu_data_t));
             int64_t time_delta = esp_timer_get_time() - p_hi229->raw_timestamp; // process time delta
             // tsf timestamp
-            out->tsf_time_us = esp_mesh_get_tsf_time() - time_delta;
+            out->tsf_ts_us = esp_wifi_get_tsf_time(WIFI_IF_STA) - time_delta;
 
             size_t uart_buffer_len;
             uart_get_buffered_data_len(p_hi229->config.port, &uart_buffer_len);
@@ -173,7 +174,7 @@ esp_err_t IRAM_ATTR hi229_read(imu_t *p_imu_in, imu_dgram_t *out, bool crc_check
             // unix timestamp
             struct timeval tv_now = { 0, 0 };
             gettimeofday(&tv_now, NULL);
-            out->time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec - time_delta;
+            out->dev_ts_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec - time_delta;
             xEventGroupClearBits(p_hi229->event_group, EV_DATA_READY);
         } else {
             ESP_LOGD(TAG, "out is null");
@@ -372,13 +373,25 @@ esp_err_t hi229_write_bytes(imu_t *p_imu, void *in, size_t len) {
 }
 
 
-void imu_interface_init(imu_interface_t *p_interface, imu_config_t * p_config) {
+void hi229_interface_init(imu_interface_t *p_interface, imu_config_t *p_config) {
     p_interface->p_imu = (imu_t *) &s_hi229;
     if (p_interface->p_imu->initialized) {
         ESP_LOGW(TAG, "IMU already initialized");
         return;
     } else {
-        hi229_init(p_interface->p_imu, p_config);
+        hi229_config_t cfg = {
+            .base = { .target_fps = p_config->target_fps },
+            .port = CONFIG_HI229_UART_PORT,
+            .baud = g_mcu.imu_baud,
+            .ctrl_pin = CONFIG_HI229_EN_PIN,
+            .rx_pin = CONFIG_HI229_RX,
+            .tx_pin = CONFIG_HI229_TX,
+            .rts_pin = CONFIG_HI229_RTS,
+            .cts_pin = CONFIG_HI229_CTS,
+            .sync_in_pin = CONFIG_HI229_SYNC_IN,
+            .sync_out_pin = CONFIG_HI229_SYNC_OUT,
+        };
+        hi229_init(p_interface->p_imu, (imu_config_t *) &cfg);
     }
 
     p_interface->init = hi229_init;
@@ -389,7 +402,7 @@ void imu_interface_init(imu_interface_t *p_interface, imu_config_t * p_config) {
     p_interface->soft_reset = hi229_chip_soft_reset;
     p_interface->hard_reset = hi229_chip_hard_reset;
     p_interface->buffer_reset = hi229_buffer_reset;
-    p_interface->get_delay_us= hi229_get_buffer_delay;
+    p_interface->get_delay_us = hi229_get_buffer_delay;
     p_interface->read_bytes = hi229_read_bytes;
     p_interface->write_bytes = hi229_write_bytes;
 }

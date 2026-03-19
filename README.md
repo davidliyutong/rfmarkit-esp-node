@@ -8,36 +8,80 @@ This is the firmware for RFMarkIt project, which is a project for a active marke
 
 For more details, visit [our website](https://sites.google.com/view/markit-virat/home)
 
+## Local Development Setup
+
+### Prerequisites
+
+- **CMake, Ninja** — `brew install cmake ninja dfu-util` (macOS) or via your package manager
+- **Python 3.9+**
+- **[uv](https://docs.astral.sh/uv/)** and **[direnv](https://direnv.net/)** (optional, for automatic env activation):
+
+```shell
+brew install uv direnv    # macOS
+```
+
+- **Apple Silicon** — if you hit xtensa toolchain errors, install Rosetta: `/usr/sbin/softwareupdate --install-rosetta --agree-to-license`
+
+### Setup
+
+Bootstrap a project-local ESP-IDF installation (cloned into `.esp-idf/`, tools into `.espressif/`):
+
+```shell
+make setup              # one-time: clones ESP-IDF and installs toolchains
+```
+
+This does not touch your system environment. All subsequent `make` targets automatically activate the local ESP-IDF.
+
+To pin a different ESP-IDF version:
+
+```shell
+make setup IDF_VERSION=v4.4.4
+```
+
+Optionally set up Python helpers and direnv:
+
+```shell
+uv sync                 # install Python dependencies (pyserial, etc.)
+direnv allow            # auto-activate ESP-IDF env when entering the directory
+```
+
+### Recommended IDE
+
+VSCode with the [ESP-IDF Extension](https://marketplace.visualstudio.com/items?itemName=espressif.esp-idf-extension).
+
+### Serial Port
+
+- macOS: `/dev/cu.usbserial-*` or `/dev/cu.SLAB_USBtoUART`
+- Linux: `/dev/ttyUSB*` (may need `sudo usermod -aG dialout $USER`)
+
 ## Get Started
 
-First, setup esp-idf environment(v4.4.4) according to the official guide [here](https://docs.espressif.com/projects/esp-idf/zh_CN/v4.4.4/esp32/get-started/)
-
-Now, you need to choose from hardware v1.0 and v2.0. v1.0 uses esp32 and hi229, while v2.0 uses esp32s3 and bno085
+Choose your hardware target. v1 uses ESP32 + HI229, v2 uses ESP32-S3 + BNO085:
 
 ```shell
-make set_hardware_v1
-make set_hardware_v2
+make set_hardware_v1    # or: idf.py set-target esp32
+make set_hardware_v2    # or: idf.py set-target esp32s3
 ```
 
-If you want to change other settings (e.g. use linear acceleration), you can run `idf.py menuconfig` in the project root directory.
+To change other settings (e.g. use linear acceleration):
 
 ```shell
-idf.py menuconfig
+make menuconfig         # or: idf.py menuconfig
 ```
 
-```shell
-
-Then, build the project by running `idf.py build` in the project root directory.
+Build:
 
 ```shell
-idf.py build
+make build              # or: idf.py build
 ```
 
-To flash an node, run `idf.py flash monitor` in the project root directory.
+Flash and monitor:
 
 ```shell
-idf.py -p <PORT> flash monitor
+make flash-monitor      # or: idf.py -p <PORT> flash monitor
 ```
+
+Run `make help` for all available targets.
 
 ## Developers' Guide
 

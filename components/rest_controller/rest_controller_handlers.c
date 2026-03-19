@@ -1,5 +1,5 @@
 #include <string.h>
-#include <esp_mesh.h>
+#include <esp_wifi.h>
 #include <math.h>
 
 #include "esp_http_server.h"
@@ -104,7 +104,7 @@ esp_err_t system_info_handler(httpd_req_t *req) {
     gettimeofday(&tv_now, NULL);
     double now = tv_now.tv_sec + (double) tv_now.tv_usec / 1000000;
     cJSON_AddNumberToObject(root, "time", now);
-    int64_t tsf_time = esp_mesh_get_tsf_time();
+    int64_t tsf_time = esp_wifi_get_tsf_time(WIFI_IF_STA);
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     cJSON_AddNumberToObject(root, "tsf_time", tsf_time);
     int64_t battery_level = battery_read_level();

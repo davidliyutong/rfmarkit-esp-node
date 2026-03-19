@@ -3,8 +3,6 @@
 //
 #include <stdlib.h>
 
-#include <lwip/apps/sntp.h>
-
 #include "esp_log.h"
 #include "esp_sntp.h"
 
@@ -51,36 +49,36 @@ void sys_time_sync_handler(
         tzset();
 
         /** Configure **/
-        sntp_setoperatingmode(SNTP_OPMODE_POLL);
+        esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
         if (s_sntp_retry_num <= CONFIG_NTP_PRIMARY_MAX_RETRY) {
             if (strlen(g_mcu.ntp_host_ip_addr) > 0) {
                 /** use the primary NTP server **/
-                sntp_setservername(0, g_mcu.ntp_host_ip_addr);
+                esp_sntp_setservername(0, g_mcu.ntp_host_ip_addr);
                 ESP_LOGI(TAG, "sntp server is set to primary[%s]", g_mcu.ntp_host_ip_addr);
             } else {
                 /** fallback to gw **/
                 char ip_str[16];
                 sprintf(ip_str, IPSTR, IP2STR(&(g_mcu.ip_info.gw)));
-                sntp_setservername(0, ip_str);
+                esp_sntp_setservername(0, ip_str);
                 ESP_LOGI(TAG, "sntp server is set to gw[%s]", ip_str);
             }
         } else {
-            sntp_setservername(0, CONFIG_NTP_HOST_IP_ADDR_BACKUP);
+            esp_sntp_setservername(0, CONFIG_NTP_HOST_IP_ADDR_BACKUP);
             ESP_LOGI(TAG, "sntp server is set to backup[%s]", CONFIG_NTP_HOST_IP_ADDR_BACKUP);
         }
 
-        sntp_set_sync_mode(SNTP_SYNC_MODE_IMMED);
-        sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+        esp_sntp_set_sync_mode(SNTP_SYNC_MODE_IMMED);
+        esp_sntp_set_time_sync_notification_cb(time_sync_notification_cb);
 
         /** Start and Wait **/
-        sntp_init();
+        esp_sntp_init();
         int n_retry = 0;
-        while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++n_retry < CONFIG_NTP_TIMEOUT_S) {
+        while (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++n_retry < CONFIG_NTP_TIMEOUT_S) {
             os_delay_ms(1000);
         }
-        sntp_stop();
+        esp_sntp_stop();
 
-        ESP_LOGI(TAG, "previous time sync ended with %d tries, sntp_get_sync_status()= %d", n_retry, sntp_get_sync_status());
+        ESP_LOGI(TAG, "previous time sync ended with %d tries, sntp_get_sync_status()= %d", n_retry, esp_sntp_get_sync_status());
 
         if (n_retry >= CONFIG_NTP_TIMEOUT_S) {
             ESP_LOGW(TAG, "time sync failed after %d tries", n_retry);

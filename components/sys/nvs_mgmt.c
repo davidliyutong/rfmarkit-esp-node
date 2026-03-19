@@ -119,7 +119,7 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
     switch (p_var->type) {
         case VAR_INT32:
             nvs_get_i32(var_handle, p_var->name, (void *) &data);
-            snprintf(value_buffer, CONFIG_VAR_STR_MAX_LEN, "%d", (int32_t) data.int32);
+            snprintf(value_buffer, CONFIG_VAR_STR_MAX_LEN, "%ld", (long) data.int32);
             break;
         case VAR_FLOAT32:
             nvs_get_blob(var_handle, p_var->name, (void *) &data, NULL);
@@ -172,6 +172,19 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
         p_var = NULL; \
         bzero(value_buffer, CONFIG_VAR_STR_MAX_LEN)
 
+#define sys_load_int32_conf_default(name, target, default_val) \
+        p_var = sys_find_var((name), strlen(name));\
+        if (p_var != NULL) {\
+            sys_get_nvs_var(p_var, &data, value_buffer);\
+            (target) = data.int32; \
+            ESP_LOGW(TAG, "Variable "name"=%d; value_stored=%d", (target), data.int32); \
+        } else { \
+            (target) = (default_val); \
+            ESP_LOGW(TAG, "Variable "name" not found, using default=%d", (default_val)); \
+        } \
+        p_var = NULL; \
+        bzero(value_buffer, CONFIG_VAR_STR_MAX_LEN)
+
 /**
  * Load NVS configuration to g_mcu variable, for only ONCE
 **/
@@ -189,7 +202,7 @@ static void sys_load_nvs_configuration() {
     sys_load_str_conf(CONFIG_NVS_DATA_HOST_NAME, g_mcu.data_host_ip_addr, CONFIG_DATA_HOST_IP_ADDR);
     sys_load_str_conf(CONFIG_NVS_NTP_HOST_NAME, g_mcu.ntp_host_ip_addr, CONFIG_NTP_HOST_IP_ADDR);
 #if CONFIG_IMU_SENSOR_HI229
-    sys_load_int32_conf(CONFIG_NVS_IMU_BAUD_NAME, g_mcu.imu_baud, CONFIG_IMU_BAUD);
+    sys_load_int32_conf_default(CONFIG_NVS_IMU_BAUD_NAME, g_mcu.imu_baud, CONFIG_IMU_BAUD);
 #endif
     sys_load_int32_conf(CONFIG_NVS_SEQ_NAME, g_mcu.seq);
     sys_load_int32_conf(CONFIG_NVS_TARGET_FPS_NAME, g_mcu.target_fps);

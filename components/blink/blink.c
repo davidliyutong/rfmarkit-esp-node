@@ -231,7 +231,7 @@ void blink_msp_init() {
             .channel = CONFIG_LEDC_HS_CH0_CHANNEL,
             .duty = 0,
             .gpio_num = CONFIG_BLINK_PIN,
-#if defined(CONFIG_IDF_TARGET_ESP32S)
+#if defined(CONFIG_IDF_TARGET_ESP32)
             .speed_mode = LEDC_HIGH_SPEED_MODE,
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
             .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -244,7 +244,7 @@ void blink_msp_init() {
     ledc_timer_config_t ledc_timer = {
         .duty_resolution = LEDC_TIMER_13_BIT,
         .freq_hz = CONFIG_BLINK_PWN_FREQ,
-#if defined(CONFIG_IDF_TARGET_ESP32S)
+#if defined(CONFIG_IDF_TARGET_ESP32)
         .speed_mode = LEDC_HIGH_SPEED_MODE,
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
         .speed_mode = LEDC_LOW_SPEED_MODE,

@@ -1,6 +1,10 @@
 .vscode
 .idea
 .cache
+.direnv
+.venv
+.esp-idf
+.espressif
 
 cmake-build-*
 build
@@ -11,5 +15,6 @@ ota/version.txt
 
 sdkconfig.old
 sdkconfig
+sdkconfig.defaults
 
 

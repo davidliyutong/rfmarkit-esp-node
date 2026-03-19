@@ -1,43 +1,55 @@
 //
 // Created by liyutong on 2024/4/30.
 
-#include <esp_adc_cal.h>
+#include <inttypes.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "esp_sleep.h"
 #include "esp_log.h"
-
-#include "driver/adc.h"
 #include "driver/gpio.h"
+
+#include "esp_adc/adc_oneshot.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 
 #include "battery.h"
 #include "modelspec.h"
 
 static const char *TAG = "battery         ";
 
-#if defined(CONFIG_IDF_TARGET_ESP32)
-#define ADC_CALI_SCHEME     ESP_ADC_CAL_VAL_EFUSE_VREF
-#elif defined(CONFIG_IDF_TARGET_ESP32S3)
-#define ADC_CALI_SCHEME     ESP_ADC_CAL_VAL_EFUSE_TP_FIT
-#endif
-
-#define ADC_ATTEN_DB ADC_ATTEN_DB_11
-#define ADC_WIDTH_BIT ADC_WIDTH_BIT_12
-
-static esp_adc_cal_characteristics_t adc1_chars;
 static bool cali_enable = false;
 
-static bool adc_calibration_init(void) {
-    esp_err_t ret;
+static adc_oneshot_unit_handle_t adc1_handle = NULL;
+static adc_cali_handle_t adc1_cali_handle = NULL;
 
-    ret = esp_adc_cal_check_efuse(ADC_CALI_SCHEME);
-    if (ret == ESP_ERR_NOT_SUPPORTED) {
-        ESP_LOGW(TAG, "Calibration scheme not supported, skip software calibration");
-    } else if (ret == ESP_ERR_INVALID_VERSION) {
-        ESP_LOGW(TAG, "eFuse not burnt, skip software calibration");
-    } else if (ret == ESP_OK) {
+static bool adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten) {
+    adc_cali_handle_t handle = NULL;
+    esp_err_t ret = ESP_FAIL;
+
+#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
+    adc_cali_curve_fitting_config_t cali_config = {
+        .unit_id = unit,
+        .chan = channel,
+        .atten = atten,
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+    };
+    ret = adc_cali_create_scheme_curve_fitting(&cali_config, &handle);
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+    adc_cali_line_fitting_config_t cali_config = {
+        .unit_id = unit,
+        .atten = atten,
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+    };
+    ret = adc_cali_create_scheme_line_fitting(&cali_config, &handle);
+#endif
+
+    if (ret == ESP_OK) {
         cali_enable = true;
-        esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB, ADC_WIDTH_BIT, 0, &adc1_chars);
+        adc1_cali_handle = handle;
+        ESP_LOGI(TAG, "ADC calibration success");
     } else {
-        ESP_LOGE(TAG, "Invalid arg");
+        cali_enable = false;
+        ESP_LOGW(TAG, "Calibration not supported or failed, skip software calibration");
     }
 
     return cali_enable;
@@ -61,12 +73,18 @@ esp_err_t battery_msp_init() {
     gpio_config(&io_config);
 #endif
 
-    /** Init GPIO **/
-    cali_enable = adc_calibration_init();
+    adc_oneshot_unit_init_cfg_t init_config = {
+        .unit_id = ADC_UNIT_1,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adc1_handle));
 
-    /** ADC1 config **/
-    ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT));
-    ESP_ERROR_CHECK(adc1_config_channel_atten(CONFIG_BATTERY_READ_ADC_CHANNEL, ADC_ATTEN_DB));
+    adc_oneshot_chan_cfg_t chan_config = {
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .atten = ADC_ATTEN_DB_12,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, CONFIG_BATTERY_READ_ADC_CHANNEL, &chan_config));
+
+    adc_calibration_init(ADC_UNIT_1, CONFIG_BATTERY_READ_ADC_CHANNEL, ADC_ATTEN_DB_12);
 
     /** Self-Test **/
     int lvl = battery_read_level();
@@ -83,14 +101,20 @@ int battery_read_level() {
     gpio_set_level(CONFIG_BATTERY_EN_PIN, CONFIG_BATTERY_EN_VALUE);
 #endif
     battery_delay_ms(50);
-    int adc_raw = adc1_get_raw(CONFIG_BATTERY_READ_ADC_CHANNEL);
+
+    int adc_raw;
     uint32_t voltage;
+
+    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, CONFIG_BATTERY_READ_ADC_CHANNEL, &adc_raw));
     if (cali_enable) {
-        voltage = esp_adc_cal_raw_to_voltage(adc_raw, &adc1_chars);
-        ESP_LOGD(TAG, "cali data: %d mV", voltage);
+        int cali_voltage;
+        ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_handle, adc_raw, &cali_voltage));
+        voltage = (uint32_t)cali_voltage;
+        ESP_LOGD(TAG, "cali data: %" PRIu32 " mV", voltage);
     } else {
-        voltage = adc_raw * 1100 / (1 << ADC_WIDTH_BIT_12);
+        voltage = adc_raw * 1100 / 4096;
     }
+
 #ifdef CONFIG_BATTERY_EN_PIN
     gpio_set_level(CONFIG_BATTERY_EN_PIN, !CONFIG_BATTERY_EN_VALUE);
 
