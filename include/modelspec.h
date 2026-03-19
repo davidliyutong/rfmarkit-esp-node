@@ -51,6 +51,17 @@
 #define CONFIG_IMU_INT_PIN                  GPIO_NUM_9     // Need RTC GPIO
 #define CONFIG_IMU_RST_PIN                  GPIO_NUM_8     // Need RTC GPIO
 #endif
+#elif defined(CONFIG_IDF_TARGET_ESP32C5)
+#if CONFIG_IMU_SENSOR_BNO08X
+/** If SPI is used **/
+#define CONFIG_IMU_WAKE_PIN                 GPIO_NUM_3    // RTC GPIO, OUTPUT
+#define CONFIG_IMU_MOSI_PIN                 GPIO_NUM_13
+#define CONFIG_IMU_MISO_PIN                 GPIO_NUM_11
+#define CONFIG_IMU_SCLK_PIN                 GPIO_NUM_12
+#define CONFIG_IMU_CS_PIN                   GPIO_NUM_10
+#define CONFIG_IMU_INT_PIN                  GPIO_NUM_9    // RTC GPIO
+#define CONFIG_IMU_RST_PIN                  GPIO_NUM_8    // RTC GPIO
+#endif
 #endif
 
 /** Battery configuration configuration **/
@@ -60,6 +71,9 @@
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
 #define CONFIG_BATTERY_EN_PIN               GPIO_NUM_2
 #define CONFIG_BATTERY_READ_ADC_CHANNEL     ADC_CHANNEL_0  //  GPIO_NUM_1
+#elif defined(CONFIG_IDF_TARGET_ESP32C5)
+#define CONFIG_BATTERY_EN_PIN               GPIO_NUM_2
+#define CONFIG_BATTERY_READ_ADC_CHANNEL     ADC_CHANNEL_0
 #endif
 
 #endif

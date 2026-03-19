@@ -23,7 +23,7 @@
 // Depending on the board (esp32s, esp32s3), the port is different
 #if defined(CONFIG_IDF_TARGET_ESP32)
 #define CONFIG_BNO08X_SPI_HOST          VSPI_HOST
-#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+#elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C5)
 #define CONFIG_BNO08X_SPI_HOST          SPI2_HOST
 #endif
 

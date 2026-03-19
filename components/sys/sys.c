@@ -252,7 +252,7 @@ void sys_start_tasks(void) {
 #endif
 #else
     launch_task(app_data_client, "app_data_client", 4096, NULL, 12, g_mcu.tasks.app_data_client_task);
-    launch_task(app_uart_monitor, "app_monitor", 4096, NULL, 12, g_mcu.tasks.app_monitor_task);
+    launch_task(app_monitor, "app_monitor", 4096, NULL, 12, g_mcu.tasks.app_monitor_task);
     launch_task(app_system_loop, "app_system_loop", 4096, NULL, 8, g_mcu.tasks.app_system_loop_task);
 #if CONFIG_PROFILING_ENABLED
     if (g_mcu.tasks.app_log_trace_task == NULL){

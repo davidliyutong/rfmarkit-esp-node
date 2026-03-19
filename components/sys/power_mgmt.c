@@ -124,7 +124,7 @@ esp_err_t power_mgmt_init() {
 **/
 power_mgmt_state_t power_mgmt_wake_up_handler() {
     esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
-    if (cause == ESP_SLEEP_WAKEUP_EXT0) {
+    if (cause == ESP_SLEEP_WAKEUP_EXT0 || cause == ESP_SLEEP_WAKEUP_GPIO) {
         ESP_LOGI(TAG, "wakeup from button");
         return POWER_NORMAL_BOOT;
     } else {
@@ -297,7 +297,13 @@ _Noreturn esp_err_t power_mgmt_on_enter_deep_sleep(bool wakeup) {
         ESP_LOGI(TAG, "entering deep sleep forever...");
     }
     /** Allow wakeup from button **/
+#if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3)
     esp_sleep_enable_ext0_wakeup(CONFIG_BUTTON_FN_GPIO_PIN, CONFIG_BUTTON_FN_ACTIVE_LEVEL);
+#elif defined(CONFIG_IDF_TARGET_ESP32C5)
+    esp_deep_sleep_enable_gpio_wakeup(
+        BIT64(CONFIG_BUTTON_FN_GPIO_PIN),
+        CONFIG_BUTTON_FN_ACTIVE_LEVEL ? ESP_GPIO_WAKEUP_GPIO_HIGH : ESP_GPIO_WAKEUP_GPIO_LOW);
+#endif
 
     g_power_mgmt_ctx.state = POWER_DEEP_SLEEP;
     esp_deep_sleep_start();
