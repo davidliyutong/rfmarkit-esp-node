@@ -3,6 +3,8 @@
 //
 #include <esp_wifi.h>
 
+#include "driver/gpio.h"
+#include "soc/soc_caps.h"
 #include "esp_system.h"
 #include "esp_sleep.h"
 #include "esp_attr.h"
@@ -81,9 +83,18 @@ esp_err_t power_mgmt_init() {
      gpio_hold_dis(CONFIG_IMU_EN_PIN);
 #endif
     gpio_hold_dis(CONFIG_BLINK_PIN);
+#if SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
+    /** On ESP32-C5, gpio_hold_en() already persists through deep sleep per-pin,
+     *  so re-enable hold on the pins we just released **/
+#ifdef CONFIG_IMU_EN_PIN
+    gpio_hold_en(CONFIG_IMU_EN_PIN);
+#endif
+    gpio_hold_en(CONFIG_BLINK_PIN);
+#else
     gpio_deep_sleep_hold_dis();
     /** Enable gpio hold in deep sleep **/
     gpio_deep_sleep_hold_en();
+#endif
 
     ++g_power_mgmt_ctx.boot_count;
     ESP_LOGI(TAG, "system booted %d times", g_power_mgmt_ctx.boot_count);

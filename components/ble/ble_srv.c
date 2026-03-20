@@ -1,7 +1,6 @@
 //
 // Created by liyutong on 2024/4/28.
 //
-#include "esp_nimble_hci.h"
 #include "esp_log.h"
 
 #include "nimble/nimble_port.h"
