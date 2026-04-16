@@ -6,6 +6,10 @@
 
 #include "esp_system.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint16_t size;
     uint16_t item_width;
@@ -31,5 +35,9 @@ esp_err_t ring_buf_push_safe(ring_buf_t *rb, void *item);
 esp_err_t ring_buf_peek(ring_buf_t *rb, void *item, int64_t index, int64_t *index_out);
 
 esp_err_t ring_buf_free(ring_buf_t *rb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

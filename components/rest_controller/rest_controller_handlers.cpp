@@ -543,8 +543,8 @@ esp_err_t imu_debug_socket_handler(httpd_req_t *req) {
     /** buf len is CONFIG_WEBSOCKET_FRAM_MAX_LEN+1 is for NULL termination as we are expecting a string **/
     uint8_t buf[CONFIG_WEBSOCKET_FRAM_MAX_LEN + 1];
     httpd_ws_frame_t ws_pkt = {
+        .type = HTTPD_WS_TYPE_TEXT,
         .payload = buf,
-        .type = HTTPD_WS_TYPE_TEXT
     };
 
     /** Set max_len = CONFIG_WEBSOCKET_FRAM_MAX_LEN to get the frame payload **/
@@ -671,7 +671,7 @@ esp_err_t blink_toggle_handler(httpd_req_t *req) {
             cJSON_AddStringToObject(root, "target_state", target_state);
             target_state_enum = (int) strtol(target_state, NULL, 10);
             if (target_state_enum > 0) {
-                err = sys_set_led_status(target_state_enum);
+                err = sys_set_led_status(static_cast<led_status_enum>(target_state_enum));
                 if (err == ESP_OK) {
                     cJSON_AddStringToObject(root, "status", "ok");
                 } else {

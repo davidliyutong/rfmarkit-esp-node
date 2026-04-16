@@ -16,6 +16,10 @@
 struct ble_hs_cfg;
 struct ble_gatt_register_ctxt;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg);
 
 int gatt_svr_init(void);
@@ -23,5 +27,9 @@ int gatt_svr_init(void);
 void blehr_start_srv(bool *status_out);
 
 void blehr_stop_srv(bool *status_out);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

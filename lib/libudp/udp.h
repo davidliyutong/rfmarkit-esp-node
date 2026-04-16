@@ -11,6 +11,10 @@
 #include <lwip/inet.h>
 #include <lwip/sockets.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     bool initialized;
     uint16_t source_port;
@@ -38,6 +42,10 @@ esp_err_t udp_socket_set_timeout(udp_socket_t* object, uint32_t timeout_s);
 esp_err_t udp_socket_send(udp_socket_t* object, uint8_t * data_ptr, size_t size);
 
 esp_err_t udp_socket_recv(udp_socket_t* object, uint8_t * data_ptr, size_t size, size_t * len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //#_UDP_H
 

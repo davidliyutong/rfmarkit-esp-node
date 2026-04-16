@@ -6,8 +6,16 @@
 
 #define CONFIG_USER_CTX_BUFSIZE 64
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 httpd_handle_t rest_controller_start(const char *base_path);
 
 esp_err_t rest_controller_stop(httpd_handle_t server);
 
-#endif 
+#ifdef __cplusplus
+}
+#endif
+
+#endif

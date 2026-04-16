@@ -1,6 +1,5 @@
-FILE(GLOB_RECURSE sources *.c)
 idf_component_register(
-        SRCS ${sources}
+        SRCS udp.cpp
         INCLUDE_DIRS .
         REQUIRES lwip
 )

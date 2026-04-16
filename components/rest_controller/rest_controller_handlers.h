@@ -4,6 +4,10 @@
 #include "esp_err.h"
 #include "esp_http_server.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // clang-format off
 
 esp_err_t system_info_handler(httpd_req_t *req);
@@ -36,6 +40,8 @@ esp_err_t operation_mode_handler(httpd_req_t *req);
 
 // clang-format on
 
-// TODO: add basic auth / jwt
+#ifdef __cplusplus
+}
+#endif
 
 #endif

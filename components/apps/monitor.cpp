@@ -29,14 +29,14 @@ static void IRAM_ATTR read_timer_cb_handler(void *arg) {
 static QueueHandle_t read_signal_queue = NULL;
 #endif
 
-_Noreturn void app_monitor(void *pvParameters) {
+[[noreturn]] void app_monitor(void *pvParameters) {
     ESP_LOGI(TAG, "app_monitor started");
 
     /** Get a ring buffer pointer **/
     ring_buf_t *serial_buf = &g_mcu.imu_ring_buf;
 
     /** Create a imu data structure **/
-    imu_dgram_t imu_data = {0};
+    imu_dgram_t imu_data = {};
 
 #if CONFIG_EN_READ_FPS_LIM
     /** Limit the read FPS **/
@@ -44,10 +44,9 @@ _Noreturn void app_monitor(void *pvParameters) {
     esp_timer_handle_t read_timer;
     const esp_timer_create_args_t blink_timer_args = {
         .callback = &read_timer_cb_handler,
-        /** name is optional, but may help identify the timer when debugging */
+        .arg = read_signal_queue,
         .name = "timeout",
         .skip_unhandled_events = true,
-        .arg = read_signal_queue
     };
     ESP_ERROR_CHECK(esp_timer_create(&blink_timer_args, &read_timer));
 #endif

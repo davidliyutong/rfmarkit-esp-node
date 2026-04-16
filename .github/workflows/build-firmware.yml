@@ -9,113 +9,72 @@ env:
   ESP_IDF_VERSION: v5.5.3
 
 jobs:
-  build_v1:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: v1
+            target: esp32
+            sdkconfig: sdkconfig.defaults.v1
+          - variant: v2
+            target: esp32s3
+            sdkconfig: sdkconfig.defaults.v2
+          - variant: v3
+            target: esp32c5
+            sdkconfig: sdkconfig.defaults.v3
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: esp-idf build
         uses: espressif/esp-idf-ci-action@v1
         with:
           esp_idf_version: ${{ env.ESP_IDF_VERSION }}
-          target: esp32
+          target: ${{ matrix.target }}
           path: '/'
-          command: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.v1" build
+          command: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;${{ matrix.sdkconfig }}" build
 
       - name: Pack
         run: |
-          tar -czf rfmarkit-esp-node-v1.tar.gz ./build/rfmarkit-esp-node.bin ./build/rfmarkit-esp-node.elf
-          cp ./build/rfmarkit-esp-node.bin rfmarkit-esp-node-v1.bin
+          tar -czf rfmarkit-esp-node-${{ matrix.variant }}.tar.gz ./build/rfmarkit-esp-node.bin ./build/rfmarkit-esp-node.elf
+          cp ./build/rfmarkit-esp-node.bin rfmarkit-esp-node-${{ matrix.variant }}.bin
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: rfmarkit-esp-node-v1
-          path: rfmarkit-esp-node-v1.tar.gz
+          name: rfmarkit-esp-node-${{ matrix.variant }}
+          path: |
+            rfmarkit-esp-node-${{ matrix.variant }}.bin
+            rfmarkit-esp-node-${{ matrix.variant }}.tar.gz
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
-          draft: true
-          prerelease: true
-          files: |
-            rfmarkit-esp-node-v1.bin
-            rfmarkit-esp-node-v1.tar.gz
-
-  build_v2:
+  release:
+    needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: esp-idf build
-        uses: espressif/esp-idf-ci-action@v1
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          esp_idf_version: ${{ env.ESP_IDF_VERSION }}
-          target: esp32s3
-          path: '/'
-          command: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.v2" build
-
-      - name: Pack
-        run: |
-          tar -czf rfmarkit-esp-node-v2.tar.gz ./build/rfmarkit-esp-node.bin ./build/rfmarkit-esp-node.elf
-          cp ./build/rfmarkit-esp-node.bin rfmarkit-esp-node-v2.bin
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: rfmarkit-esp-node-v2
-          path: rfmarkit-esp-node-v2.tar.gz
+          path: artifacts
+          merge-multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: true
           prerelease: true
           files: |
-            rfmarkit-esp-node-v2.bin
-            rfmarkit-esp-node-v2.tar.gz
-
-  build_v3:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: esp-idf build
-        uses: espressif/esp-idf-ci-action@v1
-        with:
-          esp_idf_version: ${{ env.ESP_IDF_VERSION }}
-          target: esp32c5
-          path: '/'
-          command: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.v3" build
-
-      - name: Pack
-        run: |
-          tar -czf rfmarkit-esp-node-v3.tar.gz ./build/rfmarkit-esp-node.bin ./build/rfmarkit-esp-node.elf
-          cp ./build/rfmarkit-esp-node.bin rfmarkit-esp-node-v3.bin
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: rfmarkit-esp-node-v3
-          path: rfmarkit-esp-node-v3.tar.gz
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
-          draft: true
-          prerelease: true
-          files: |
-            rfmarkit-esp-node-v3.bin
-            rfmarkit-esp-node-v3.tar.gz
+            artifacts/rfmarkit-esp-node-v1.bin
+            artifacts/rfmarkit-esp-node-v1.tar.gz
+            artifacts/rfmarkit-esp-node-v2.bin
+            artifacts/rfmarkit-esp-node-v2.tar.gz
+            artifacts/rfmarkit-esp-node-v3.bin
+            artifacts/rfmarkit-esp-node-v3.tar.gz

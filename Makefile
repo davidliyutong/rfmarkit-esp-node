@@ -1,4 +1,8 @@
-.PHONY: setup update set_hardware_v1 set_hardware_v2 set_hardware_v3 build flash monitor flash-monitor clean fullclean menuconfig help
+.PHONY: all setup update set_hardware_v1 set_hardware_v2 set_hardware_v3 build flash monitor flash-monitor clean fullclean menuconfig help
+
+.DEFAULT_GOAL := build
+
+all: build
 
 # ---------- ESP-IDF local installation ----------
 IDF_VERSION    ?= v5.5.3

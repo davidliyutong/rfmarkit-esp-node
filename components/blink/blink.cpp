@@ -44,7 +44,7 @@ void blink_led_off() {
         esp_timer_stop(s_blink_timer);
     }
     ledc_stop(g_blink_cfg.ledc_channel.speed_mode, g_blink_cfg.ledc_channel.channel, 0);
-    gpio_set_level(g_blink_cfg.pin_num, !g_blink_cfg.en_val);
+    gpio_set_level(static_cast<gpio_num_t>(g_blink_cfg.pin_num), !g_blink_cfg.en_val);
     g_mcu.state.led_status = LED_OFF;
 }
 
@@ -57,7 +57,7 @@ void blink_led_on() {
         esp_timer_stop(s_blink_timer);
     }
     ledc_stop(g_blink_cfg.ledc_channel.speed_mode, g_blink_cfg.ledc_channel.channel, 1);
-    gpio_set_level(g_blink_cfg.pin_num, g_blink_cfg.en_val);
+    gpio_set_level(static_cast<gpio_num_t>(g_blink_cfg.pin_num), g_blink_cfg.en_val);
     g_mcu.state.led_status = LED_ON;
 }
 
@@ -228,28 +228,28 @@ void blink_msp_init() {
         .en_val = 1,
         .pin_num = CONFIG_BLINK_PIN,
         .ledc_channel = {
-            .channel = CONFIG_LEDC_HS_CH0_CHANNEL,
-            .duty = 0,
             .gpio_num = CONFIG_BLINK_PIN,
 #if defined(CONFIG_IDF_TARGET_ESP32)
             .speed_mode = LEDC_HIGH_SPEED_MODE,
 #elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C5)
             .speed_mode = LEDC_LOW_SPEED_MODE,
 #endif
+            .channel = CONFIG_LEDC_HS_CH0_CHANNEL,
+            .timer_sel = CONFIG_LEDC_HS_TIMER,
+            .duty = 0,
             .hpoint = 0,
-            .timer_sel = CONFIG_LEDC_HS_TIMER
         }
     };
 
     ledc_timer_config_t ledc_timer = {
-        .duty_resolution = LEDC_TIMER_13_BIT,
-        .freq_hz = CONFIG_BLINK_PWN_FREQ,
 #if defined(CONFIG_IDF_TARGET_ESP32)
         .speed_mode = LEDC_HIGH_SPEED_MODE,
 #elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C5)
         .speed_mode = LEDC_LOW_SPEED_MODE,
 #endif
+        .duty_resolution = LEDC_TIMER_13_BIT,
         .timer_num = CONFIG_LEDC_HS_TIMER,
+        .freq_hz = CONFIG_BLINK_PWN_FREQ,
         .clk_cfg = LEDC_AUTO_CLK,
     };
 

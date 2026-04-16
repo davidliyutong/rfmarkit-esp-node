@@ -1,5 +1,5 @@
 if(CONFIG_IMU_SENSOR_BNO08X)
-    FILE(GLOB_RECURSE sources *.c)
+    set(sources bno08x_driver.cpp)
 else()
     set(sources "")
 endif()
@@ -7,5 +7,5 @@ endif()
 idf_component_register(
         SRCS ${sources}
         INCLUDE_DIRS . ${CMAKE_SOURCE_DIR}/include
-        PRIV_REQUIRES imu driver esp_wifi
+        PRIV_REQUIRES imu driver esp_wifi esp32_BNO08x
 )

@@ -41,7 +41,7 @@ static void power_mgmt_timer_cb(TimerHandle_t xTimer) {
     }
 }
 
-_Noreturn void app_system_loop(void *pvParameters) {
+[[noreturn]] void app_system_loop(void *pvParameters) {
     ESP_LOGI(TAG, "system loop started");
 
     esp_event_loop_args_t loop_args = {

@@ -95,7 +95,7 @@ esp_err_t default_err_handler(httpd_req_t *req, httpd_err_code_t error) {
     const char *response = cJSON_Print(root);
     httpd_resp_sendstr(req, response);
 
-    free((void *) response);
+    free(const_cast<char *>(response));
     cJSON_Delete(root);
     return ESP_OK;
 }
@@ -124,9 +124,15 @@ esp_err_t rest_server_register(httpd_handle_t server, rest_server_context_t *res
 **/
 httpd_handle_t rest_controller_start(const char *base_path) {
     /** Check the base path **/
-    REST_CHECK(base_path, "wrong base path", err);
-    rest_server_context_t *rest_context = calloc(1, sizeof(rest_server_context_t));
-    REST_CHECK(rest_context, "no memory for rest context", err);
+    if (!base_path) {
+        ESP_LOGE(TAG, "%s(%d): wrong base path", __FUNCTION__, __LINE__);
+        return NULL;
+    }
+    auto *rest_context = static_cast<rest_server_context_t *>(calloc(1, sizeof(rest_server_context_t)));
+    if (!rest_context) {
+        ESP_LOGE(TAG, "%s(%d): no memory for rest context", __FUNCTION__, __LINE__);
+        return NULL;
+    }
     strlcpy(rest_context->base_path, base_path, sizeof(rest_context->base_path));
 
     /** Configuration for the httpd server **/
@@ -137,16 +143,16 @@ httpd_handle_t rest_controller_start(const char *base_path) {
     config.max_uri_handlers = sizeof(controller_uri) / sizeof(httpd_uri_t);
 
     ESP_LOGI(TAG, "starting RESTful controller");
-    REST_CHECK(httpd_start(&server, &config) == ESP_OK, "start controller failed", err_start);
+    if (httpd_start(&server, &config) != ESP_OK) {
+        ESP_LOGE(TAG, "%s(%d): start controller failed", __FUNCTION__, __LINE__);
+        free(rest_context);
+        return NULL;
+    }
 
     /** URI handlers **/
     rest_server_register(server, rest_context);
 
     return server;
-err_start:
-    free(rest_context);
-err:
-    return NULL;
 }
 
 /**

@@ -96,28 +96,35 @@ static int gatt_svr_chr_wifi_info(
     }
 }
 
+// Static UUID instances to avoid taking address of rvalues in C++
+static ble_uuid16_t s_uuid_wifi_cfg = BLE_UUID16_INIT(GATT_WIFI_CONFIGURATION_UUID);
+static ble_uuid16_t s_uuid_wifi_write = BLE_UUID16_INIT(GATT_WIFI_WRITE_UUID);
+static ble_uuid16_t s_uuid_wifi_read = BLE_UUID16_INIT(GATT_WIFI_READ_UUID);
+
+static struct ble_gatt_chr_def s_wifi_chars[] = {
+    {
+        /* Characteristic: WiFi Write */
+        .uuid = reinterpret_cast<ble_uuid_t *>(&s_uuid_wifi_write),
+        .access_cb = gatt_svr_chr_wifi_info,
+        .flags = BLE_GATT_CHR_F_WRITE,
+    },
+    {
+        /* Characteristic: WiFi Read */
+        .uuid = reinterpret_cast<ble_uuid_t *>(&s_uuid_wifi_read),
+        .access_cb = gatt_svr_chr_wifi_info,
+        .flags = BLE_GATT_CHR_F_READ,
+    },
+    {
+        0, /** No more characteristics in this service **/
+    },
+};
+
 static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
     {
         /** Service: Device Information **/
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
-        .uuid = BLE_UUID16_DECLARE(GATT_WIFI_CONFIGURATION_UUID),
-        .characteristics = (struct ble_gatt_chr_def[])
-            {{
-                 /* Characteristic: * Manufacturer name */
-                 .uuid = BLE_UUID16_DECLARE(GATT_WIFI_WRITE_UUID),
-                 .access_cb = gatt_svr_chr_wifi_info,
-                 .flags = BLE_GATT_CHR_F_WRITE,
-             },
-             {
-                 /* Characteristic: * Manufacturer name */
-                 .uuid = BLE_UUID16_DECLARE(GATT_WIFI_READ_UUID),
-                 .access_cb = gatt_svr_chr_wifi_info,
-                 .flags = BLE_GATT_CHR_F_READ,
-             },
-             {
-                 0, /** No more characteristics in this service **/
-             },
-            }
+        .uuid = reinterpret_cast<ble_uuid_t *>(&s_uuid_wifi_cfg),
+        .characteristics = s_wifi_chars,
     },
 
     {

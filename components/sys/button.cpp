@@ -27,7 +27,7 @@ typedef enum {
     LONG_PRESS,
 } button_event_t;
 
-typedef void (*button_isr_handler_t)();
+typedef void (*button_isr_handler_t)(void *);
 
 static QueueHandle_t button_event_queue;
 static button_state_t button_state = IDLE;
@@ -74,7 +74,7 @@ static void IRAM_ATTR button_fn_isr_handler(void *params) {
  * 2. If the button is clicked, the Marker will switch between active / standby mode.
  * 3. If the button is double clicked, the Marker will calibrate
 **/
-_Noreturn void button_daemon(void *params) {
+[[noreturn]] static void button_daemon(void *params) {
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     button_event_t ev;
     while (1) {
@@ -129,7 +129,7 @@ void sys_init_buttons() {
             .intr_type = GPIO_INTR_ANYEDGE
         };
         gpio_config(&io_config);
-        gpio_isr_handler_add(pins[i], isr_handlers[i], NULL);
+        gpio_isr_handler_add(static_cast<gpio_num_t>(pins[i]), isr_handlers[i], NULL);
     }
 
     xTaskNotifyGive(button_daemon_task);

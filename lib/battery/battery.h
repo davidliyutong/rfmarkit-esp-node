@@ -1,16 +1,17 @@
-//
-// Created by liyutong on 2024/4/30.
-//
-
 #ifndef BATTERY_
 #define BATTERY_
 
-#define CONFIG_BATTERY_EN_VALUE             1
+#include "esp_err.h"
 
-#define battery_delay_ms(x) vTaskDelay((x) / portTICK_PERIOD_MS)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 esp_err_t battery_msp_init(void);
-
 int battery_read_level(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

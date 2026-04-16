@@ -6,6 +6,10 @@
 #include "driver/ledc.h"
 #include "hal/ledc_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Blink settings **/
 #define CONFIG_BLINK_TIMER_INTERVAL_MS  50  // Blink interval in ms
 #define CONFIG_BLINK_SEQ_LEN            24  // Hamming code
@@ -44,5 +48,9 @@ void blink_led_start_slow_breath_pattern(void);
 void blink_msp_init(void);
 
 void blink_start_seq_enc_pattern(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

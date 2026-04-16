@@ -13,6 +13,10 @@
 #include "settings.h"
 #include "ring_buf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Core Macros **/
 #define MIN(a, b) (a)<(b)?(a):(b)
 #define MAX(a, b) (a)<(b)?(b):(a)
@@ -38,7 +42,7 @@
 /** FreeRTOS related **/
 #define launch_task(target, name, size, arg, priority, handle) \
     if ((handle) == NULL) { \
-        ESP_LOGI(TAG, "launching "name" task"); \
+        ESP_LOGI(TAG, "launching " name " task"); \
         xTaskCreate(target, \
                     name, \
                     size, \
@@ -48,7 +52,7 @@
     }
 #define launch_task_multicore(target, name, size, arg, priority, handle, core) \
     if ((handle) == NULL) { \
-        ESP_LOGI(TAG, "launching "name" task"); \
+        ESP_LOGI(TAG, "launching " name " task"); \
         xTaskCreatePinnedToCore(target, \
                                 name, \
                                 size, \
@@ -61,15 +65,15 @@
 
 /** Time related **/
 #define get_time_sec(time) \
-    {     struct timeval tv_now = { 0 }; \
+    do {  struct timeval tv_now = { 0 }; \
           gettimeofday(&tv_now, NULL); \
           time = tv_now.tv_sec; \
-    }NULL
+    } while(0)
 #define get_time_usec(time) \
-    {     struct timeval tv_now = { 0, 0 }; \
+    do {  struct timeval tv_now = { 0, 0 }; \
           gettimeofday(&tv_now, NULL); \
           time = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec; \
-    }NULL
+    } while(0)
 
 /** Global System Events**/
 #define EV_SYS_WIFI_CONFIG_UPDATED_BIT  BIT0
@@ -145,9 +149,9 @@ typedef struct {
 
 extern mcu_var_t g_mcu_vars[];
 
-mcu_var_t *sys_find_var(char *name, size_t len);
+mcu_var_t *sys_find_var(const char *name, size_t len);
 
-esp_err_t sys_set_nvs_var(mcu_var_t *p_var, char *value);
+esp_err_t sys_set_nvs_var(mcu_var_t *p_var, const char *value);
 
 esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buffer);
 
@@ -357,5 +361,9 @@ void sys_time_sync_handler(__attribute__((unused)) void *handler_args, __attribu
 
 /** Discovery related **/
 void sys_discovery_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

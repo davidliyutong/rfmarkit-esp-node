@@ -17,7 +17,7 @@
 #include "blink.h"
 #include "ble_srv.h"
 #include "rest_controller.h"
-#include "spatial.h"
+#include "spatial.hpp"
 #include "battery.h"
 
 static SemaphoreHandle_t sync_mutex = NULL;
@@ -281,7 +281,7 @@ esp_err_t power_mgmt_on_enter_power_save() {
  * Handle the power management event [deep_sleep]
  * @return
 **/
-_Noreturn esp_err_t power_mgmt_on_enter_deep_sleep(bool wakeup) {
+esp_err_t power_mgmt_on_enter_deep_sleep(bool wakeup) {
     ESP_LOGI(TAG, "disabling IMU and led");
 
     g_imu.toggle(g_imu.p_imu, false);

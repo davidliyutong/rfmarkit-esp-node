@@ -49,7 +49,7 @@ void sys_init_nvs() {
  * @param len
  * @return pointer to the variable
  */
-mcu_var_t *sys_find_var(char *name, size_t len) {
+mcu_var_t *sys_find_var(const char *name, size_t len) {
     for (int idx = 0; idx < (sizeof(g_mcu_vars) / sizeof(mcu_var_t)); ++idx) {
         if (strncmp(name, g_mcu_vars[idx].name, MAX(strlen(g_mcu_vars[idx].name), len)) == 0) {
             return &g_mcu_vars[idx];
@@ -64,7 +64,7 @@ mcu_var_t *sys_find_var(char *name, size_t len) {
  * @param value
  * @return
 **/
-esp_err_t sys_set_nvs_var(mcu_var_t *p_var, char *value) {
+esp_err_t sys_set_nvs_var(mcu_var_t *p_var, const char *value) {
 
     nvs_handle_t var_handle;
     ESP_ERROR_CHECK(nvs_open(CONFIG_VAR_NVS_TABLE_NAME, NVS_READWRITE, &var_handle));
@@ -118,7 +118,7 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
 
     switch (p_var->type) {
         case VAR_INT32:
-            nvs_get_i32(var_handle, p_var->name, (void *) &data);
+            nvs_get_i32(var_handle, p_var->name, &data.int32);
             snprintf(value_buffer, CONFIG_VAR_STR_MAX_LEN, "%ld", (long) data.int32);
             break;
         case VAR_FLOAT32:
@@ -130,7 +130,7 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
             data.str = value_buffer;
             break;
         case VAR_UINT8:
-            nvs_get_u8(var_handle, p_var->name, (void *) &data);
+            nvs_get_u8(var_handle, p_var->name, &data.uint8);
             snprintf(value_buffer, CONFIG_VAR_STR_MAX_LEN, "%d", (uint8_t) data.uint8);
             break;
     }
@@ -153,9 +153,9 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
             } else { \
                 memcpy((target), (default_value), strlen((default_value))); \
             } \
-            ESP_LOGW(TAG, "Variable "name"=%s; size(value_buffer)=%d", (target), strlen(target)); \
+            ESP_LOGW(TAG, "Variable " name "=%s; size(value_buffer)=%d", (target), strlen(target)); \
         } else { \
-          ESP_LOGW(TAG, "Variable "name"=%s is not found", (target)); \
+          ESP_LOGW(TAG, "Variable " name "=%s is not found", (target)); \
         } \
         p_var = NULL; \
         bzero(value_buffer, CONFIG_VAR_STR_MAX_LEN)
@@ -165,9 +165,9 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
         if (p_var != NULL) {\
             sys_get_nvs_var(p_var, &data, value_buffer);\
             (target) = data.int32; \
-            ESP_LOGW(TAG, "Variable "name"=%d; value_stored=%d", (target), data.int32); \
+            ESP_LOGW(TAG, "Variable " name "=%d; value_stored=%d", (target), data.int32); \
         } else { \
-            ESP_LOGW(TAG, "Variable "name"=%d is not found", (target)); \
+            ESP_LOGW(TAG, "Variable " name "=%d is not found", (target)); \
         } \
         p_var = NULL; \
         bzero(value_buffer, CONFIG_VAR_STR_MAX_LEN)
@@ -177,10 +177,10 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
         if (p_var != NULL) {\
             sys_get_nvs_var(p_var, &data, value_buffer);\
             (target) = data.int32; \
-            ESP_LOGW(TAG, "Variable "name"=%d; value_stored=%d", (target), data.int32); \
+            ESP_LOGW(TAG, "Variable " name "=%d; value_stored=%d", (target), data.int32); \
         } else { \
             (target) = (default_val); \
-            ESP_LOGW(TAG, "Variable "name" not found, using default=%d", (default_val)); \
+            ESP_LOGW(TAG, "Variable " name " not found, using default=%d", (default_val)); \
         } \
         p_var = NULL; \
         bzero(value_buffer, CONFIG_VAR_STR_MAX_LEN)
@@ -190,7 +190,7 @@ esp_err_t sys_get_nvs_var(mcu_var_t *p_var, mcu_var_data_t *out, char *value_buf
 **/
 static void sys_load_nvs_configuration() {
     mcu_var_t *p_var = NULL;
-    mcu_var_data_t data = {0};
+    mcu_var_data_t data = {};
 
     os_delay_ms(100);
 

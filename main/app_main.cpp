@@ -14,7 +14,6 @@
 #include "sys.h"
 #include "ring_buf.h"
 
-
 static const char *TAG = "app_main";
 
 static uint8_t s_data_buf[CONFIG_DATA_BUF_LEN * sizeof(imu_dgram_t)];
@@ -42,11 +41,9 @@ static void init() {
 
     /** Test IMU availability, must run at the end of init() **/
     g_imu.self_test(g_imu.p_imu);
-
 }
 
-
-void app_main(void) {
+extern "C" void app_main(void) {
     init();
     ESP_LOGI(TAG, "main application started");
 

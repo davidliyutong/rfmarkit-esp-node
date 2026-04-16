@@ -27,6 +27,7 @@ set(
     ${CMAKE_SOURCE_DIR}/lib/libudp
     ${CMAKE_SOURCE_DIR}/lib/spatial
     ${CMAKE_SOURCE_DIR}/components
+    ${CMAKE_SOURCE_DIR}/third_party/esp32_BNO08x
 )
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

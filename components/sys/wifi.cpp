@@ -24,8 +24,8 @@ static const char *TAG = "sys.wifi        ";
  * @param event_id
  * @param event_data
 **/
-static void wifi_event_handler(void *arg, const char *event_base,
-                               __int32_t event_id, void *event_data) {
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
         s_wifi_retry_num = CONFIG_WIFI_MAX_RETRY;
@@ -39,7 +39,7 @@ static void wifi_event_handler(void *arg, const char *event_base,
         }
         ESP_LOGI(TAG_HANDLER, "connect to the AP fail");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
+        auto *event = static_cast<ip_event_got_ip_t *>(event_data);
         ESP_LOGI(TAG_HANDLER, "got ip:"
             IPSTR, IP2STR(&event->ip_info.ip));
         xEventGroupSetBits(g_mcu.wifi_event_group, EV_WIFI_CONNECTED_BIT);
@@ -185,7 +185,7 @@ void sys_wifi_reconnect_event_handler(void *handler_args, esp_event_base_t base,
     }
     if (xSemaphoreTake(sync_mutex, portMAX_DELAY) == pdTRUE) {
         sys_wifi_try_disconnect();
-        wifi_config_t wifi_config = {0};
+        wifi_config_t wifi_config = {};
         ESP_ERROR_CHECK(sys_wifi_prepare_config(&wifi_config, g_mcu.wifi_ssid, g_mcu.wifi_psk));
         ESP_LOGI(TAG, "try to connect to %s with %s", g_mcu.wifi_ssid, g_mcu.wifi_psk);
 

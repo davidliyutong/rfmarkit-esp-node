@@ -66,15 +66,15 @@ static void tag_packet(marker_packet_t *pkt, imu_dgram_t *imu_data) {
     pkt->dev_delay_us =(int32_t)(now_us - imu_data->dev_ts_us);
 }
 
-_Noreturn void app_data_client(void *pvParameters) {
+[[noreturn]] void app_data_client(void *pvParameters) {
     ESP_LOGI(TAG, "app_data_client started");
 
     /** Get a ring buffer pointer **/
     ring_buf_t *serial_buf = &g_mcu.imu_ring_buf;
 
     /** Initialize a packet **/
-    marker_packet_t pkt = {0};
-    udp_socket_t client = {0};
+    marker_packet_t pkt = {};
+    udp_socket_t client = {};
     esp_err_t err;
 
     while (1) {
@@ -94,11 +94,12 @@ _Noreturn void app_data_client(void *pvParameters) {
             }
         }
 
+        {
         int64_t curr_index = 1;
         int64_t confirm_index = -1;
         g_mcu.missed_frames = 0;
 
-        imu_dgram_t imu_reading = {0};
+        imu_dgram_t imu_reading = {};
         while (g_mcu.state.active) {
             /** rate limit **/
             if (curr_index >= serial_buf->head) {
@@ -133,6 +134,7 @@ _Noreturn void app_data_client(void *pvParameters) {
             /** If the packet is not sent, abort **/
             if (err != ESP_OK) goto handle_error;
         }
+        } // end scope for local vars
 
 handle_error:
         ESP_LOGE(TAG, "data_client aborted, setting operation_mode=inactive");

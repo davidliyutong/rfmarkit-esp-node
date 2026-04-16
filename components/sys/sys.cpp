@@ -22,7 +22,7 @@
 #include "battery.h"
 
 /** MCU structure **/
-mcu_t g_mcu = {0};
+mcu_t g_mcu = {};
 
 static const char *TAG = "sys             ";
 
@@ -64,11 +64,11 @@ esp_err_t sys_ota_perform() {
     ESP_LOGI(TAG, "[ota] performing OTA, url=%s", g_mcu.ota_url);
     esp_http_client_config_t http_config = {
         .url = g_mcu.ota_url,
-        .max_authorization_retries = 3,
         .auth_type = HTTP_AUTH_TYPE_NONE,
+        .max_authorization_retries = 3,
         .event_handler = esp_ota_event_handler,
+        .skip_cert_common_name_check = true,
         .keep_alive_enable = true,
-        .skip_cert_common_name_check=true
     };
     esp_https_ota_config_t ota_config = {
         .http_config = &http_config,
@@ -230,7 +230,7 @@ void sys_log_trace() {
 }
 
 #if CONFIG_EN_PROFILING
-static _Noreturn void app_log_trace(void * pvParameters) {
+[[noreturn]] static void app_log_trace(void * pvParameters) {
     while (1) {
         os_delay_ms(10 * 1000);
         sys_log_heap_size();

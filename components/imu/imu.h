@@ -6,6 +6,13 @@
 
 #include "settings.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef IMU_TYPES_DEFINED_
+#define IMU_TYPES_DEFINED_
+
 typedef struct {
     uint32_t id;            /* user defined ID                  */
     float acc[3];           /* acceleration                     */
@@ -22,7 +29,7 @@ typedef struct {
     uint8_t stability;      /* stability indicator          */
     uint8_t activity;       /* activity indicator           */
     uint32_t timestamp;
-} imu_data_extra_t; // TODO: implement extra information mechanism
+} imu_data_extra_t;
 
 typedef struct {
     imu_data_t imu;
@@ -44,12 +51,17 @@ typedef enum {
     IMU_MUX_DEBUG
 } imu_mux_t;
 
+#endif /* IMU_TYPES_DEFINED_ */
+
+#ifndef IMU_CONFIG_DEFINED_
+#define IMU_CONFIG_DEFINED_
 /**
  * @brief IMU configuration
  */
 typedef struct {
     int32_t target_fps;
 } imu_config_t;
+#endif /* IMU_CONFIG_DEFINED_ */
 
 /**
  * @brief IMU object
@@ -68,7 +80,7 @@ typedef struct {
 typedef void (*imu_cb_fxn_t)(void *);  // void * is the imu_data_t
 
 /**
- * @brief IMU interface
+ * @brief IMU interface (C-compatible shim, wraps ImuDriver in C++ builds)
  */
 typedef struct {
     imu_t *p_imu;
@@ -100,5 +112,8 @@ extern imu_interface_t g_imu;
 
 void imu_interface_init(imu_interface_t *p_interface, imu_config_t *p_config);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

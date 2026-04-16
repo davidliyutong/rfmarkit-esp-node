@@ -50,7 +50,7 @@ typedef struct {
 
 static char discovery_msg_buffer[] = "\xe5\xe5\xe5\xe5\xe5\x01\x00""000000000000"; // magic header
 static SemaphoreHandle_t sync_mutex = NULL;
-static udp_socket_t client = {0};
+static udp_socket_t client = {};
 
 static const char *TAG = "sys.discovery   ";
 

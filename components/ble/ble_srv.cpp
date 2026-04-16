@@ -111,13 +111,13 @@ static int blehr_gap_event(struct ble_gap_event *event, void *arg) {
     return 0;
 }
 
-void blehr_on_sync(void) {
+extern "C" void blehr_on_sync(void) {
     int rc;
 
     rc = ble_hs_id_infer_auto(0, &blehr_addr_type);
     assert(rc == 0);
 
-    uint8_t addr_val[6] = {0};
+    uint8_t addr_val[6] = {};
     rc = ble_hs_id_copy_addr(blehr_addr_type, addr_val, NULL);
 
     ESP_LOGI(
